@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Art Auction Hash Chain</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>🖼 Аукцион картин на Hash Chain</h1>
+    <button id="validate-btn" class="secondary">🔍 Проверить целостность</button>
+  </header>
+
+  <main>
+    <section class="panel">
+      <h2>📦 Создать аукцион</h2>
+      <form id="create-form">
+        <input name="painting_id" placeholder="ID картины (напр. pic_01)" required>
+        <input name="title" placeholder="Название" required>
+        <input name="owner" placeholder="Владелец" required>
+        <input name="start_price" type="number" placeholder="Стартовая цена" required>
+        <button type="submit">➕ Создать</button>
+      </form>
+    </section>
+
+    <section class="panel">
+      <h2>💰 Сделать ставку</h2>
+      <form id="bid-form">
+        <input name="painting_id" placeholder="ID картины" required>
+        <input name="bidder" placeholder="Имя покупателя" required>
+        <input name="amount" type="number" placeholder="Сумма ставки" required>
+        <button type="submit">🔨 Поставить</button>
+      </form>
+    </section>
+
+    <section class="panel">
+      <h2>🔒 Закрыть аукцион</h2>
+      <form id="close-form">
+        <input name="painting_id" placeholder="ID картины" required>
+        <button type="submit">🏁 Закрыть & перед ownership</button>
+      </form>
+    </section>
+
+    <section class="panel hack-panel">
+      <h2>💣 Симуляция взлома</h2>
+      <form id="hack-form">
+        <input name="index" type="number" placeholder="Index блока" min="1" required>
+        <input name="new_owner" placeholder="Новый владелец (хакер)" required>
+        <input name="new_price" type="number" placeholder="Новая цена" required>
+        <button type="submit" class="danger">⚡ Взломать запись</button>
+      </form>
+      <div id="hack-result" class="result-box hidden"></div>
+    </section>
+
+    <section class="panel full-width">
+      <h2>📜 Цепочка записей</h2>
+      <div id="chain-list" class="chain-container"></div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
