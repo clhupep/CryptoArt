@@ -24,6 +24,30 @@
       "prev_hash": "cc79d77e0e716bb88f397e6f635f24ca0bcf583d8d6eb3a21824498fdc12271e",
       "timestamp": "2026-04-23T09:33:00+03:00",
       "hash": "7a30aec919af950db5d9f50f2dcdf6c1ac04ec540d65e9f15ec0edb2f7ad64c1"
+    },
+    {
+      "index": 2,
+      "type": "PLACE_BID",
+      "payload": {
+        "amount": 10234091239,
+        "bidder": "Owner",
+        "painting_id": "1"
+      },
+      "prev_hash": "7a30aec919af950db5d9f50f2dcdf6c1ac04ec540d65e9f15ec0edb2f7ad64c1",
+      "timestamp": "2026-04-23T09:50:58+03:00",
+      "hash": "0d12ea2c011cb0e930a0168cbed7c7de859728e0fa602f311406043166fdd590"
+    },
+    {
+      "index": 3,
+      "type": "CLOSE_AUCTION",
+      "payload": {
+        "final_price": 10234091239,
+        "painting_id": "1",
+        "winner": "Owner"
+      },
+      "prev_hash": "0d12ea2c011cb0e930a0168cbed7c7de859728e0fa602f311406043166fdd590",
+      "timestamp": "2026-04-23T09:51:06+03:00",
+      "hash": "e1eeeb86ab3757e51352a87d7baacc82abe12ed6c3dc71e3487b593bd02fe244"
     }
   ]
 }

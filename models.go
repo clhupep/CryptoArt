@@ -8,7 +8,7 @@ import (
 
 type AuctionRecord struct {
 	Index     int            `json:"index"`
-	Type      string         `json:"type"` // CREATE_AUCTION, PLACE_BID, CLOSE_AUCTION
+	Type      string         `json:"type"`
 	Payload   map[string]any `json:"payload"`
 	PrevHash  string         `json:"prev_hash"`
 	Timestamp string         `json:"timestamp"`

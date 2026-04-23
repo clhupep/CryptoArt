@@ -67,14 +67,20 @@ async function fetchChain() {
     if (!res.ok) throw new Error(res.statusText);
     const chain = await res.json();
 
-    const html = chain.map(r => `
-      <div class="block">
-        <b>#${r.index}</b> | ${r.type}<br>
-        <span class="hash">${new Date(r.timestamp).toLocaleString()}</span><br>
-        ${JSON.stringify(r.payload)}<br>
-        <span class="hash">${r.hash.substring(0, 16)}...</span>
-      </div>
-    `).join('');
+    const html = chain.map(r => {
+      const payloadLines = Object.entries(r.payload || {})
+        .map(([key, value]) => `<div class="payload-line"><span class="key">${key}:</span> ${value}</div>`)
+        .join('');
+
+      return `
+        <div class="block">
+          <b>#${r.index}</b> | ${r.type}<br>
+          <span class="hash">${new Date(r.timestamp).toLocaleString()}</span><br>
+          <div class="payload">${payloadLines}</div>
+          <span class="hash">${r.hash.substring(0, 16)}...</span>
+        </div>
+      `;
+    }).join('');
 
     document.getElementById('chain-list').innerHTML = html;
   } catch (err) {
@@ -82,7 +88,6 @@ async function fetchChain() {
   }
 }
 
-// 🔒 Управление состоянием "цепь взломана"
 function setCompromisedState(isCompromised) {
   const banner = document.getElementById('status-banner');
   const buttons = document.querySelectorAll('form button');
