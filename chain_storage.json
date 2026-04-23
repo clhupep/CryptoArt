@@ -7,71 +7,23 @@
         "message": "Art Auction Chain Initialized"
       },
       "prev_hash": "0",
-      "timestamp": "2026-04-22T23:50:24+03:00",
-      "hash": "8a5b41d38f20e0a2262b2c142d033cb0fdd89151600e5811281dddd0b6034c04"
+      "timestamp": "2026-04-23T09:29:04+03:00",
+      "hash": "cc79d77e0e716bb88f397e6f635f24ca0bcf583d8d6eb3a21824498fdc12271e"
     },
     {
       "index": 1,
       "type": "CREATE_AUCTION",
       "payload": {
-        "bidder": "1",
-        "current_bid": 1,
-        "owner": "1",
+        "bidder": "asd",
+        "current_bid": 124123,
+        "owner": "asd",
         "painting_id": "1",
-        "start_price": 1,
-        "title": "1"
+        "start_price": 124123,
+        "title": "asd"
       },
-      "prev_hash": "8a5b41d38f20e0a2262b2c142d033cb0fdd89151600e5811281dddd0b6034c04",
-      "timestamp": "2026-04-22T23:52:02+03:00",
-      "hash": "726f962c58a51af26541df3fcf1b9cd200902149051f4f869a7ec0709d696532"
-    },
-    {
-      "index": 2,
-      "type": "PLACE_BID",
-      "payload": {
-        "amount": 45,
-        "bidder": "1",
-        "painting_id": "1"
-      },
-      "prev_hash": "726f962c58a51af26541df3fcf1b9cd200902149051f4f869a7ec0709d696532",
-      "timestamp": "2026-04-22T23:52:19+03:00",
-      "hash": "15c264d7739d7243b1e85ce79e686745ec536b73be5e486838965eafc412dbdd"
-    },
-    {
-      "index": 3,
-      "type": "PLACE_BID",
-      "payload": {
-        "amount": 5124,
-        "bidder": "125",
-        "painting_id": "1"
-      },
-      "prev_hash": "15c264d7739d7243b1e85ce79e686745ec536b73be5e486838965eafc412dbdd",
-      "timestamp": "2026-04-22T23:52:45+03:00",
-      "hash": "09b7323bdafb07b39e90b53964447e11b8441dfbb19a06893c944bcf6dc756b8"
-    },
-    {
-      "index": 4,
-      "type": "PLACE_BID",
-      "payload": {
-        "amount": 151124125,
-        "bidder": "123",
-        "painting_id": "1"
-      },
-      "prev_hash": "09b7323bdafb07b39e90b53964447e11b8441dfbb19a06893c944bcf6dc756b8",
-      "timestamp": "2026-04-22T23:53:28+03:00",
-      "hash": "480136bde765d5426b1bb701386a48fb3912278ab95f40787431567ea9ee8260"
-    },
-    {
-      "index": 5,
-      "type": "CLOSE_AUCTION",
-      "payload": {
-        "final_price": 151124125,
-        "painting_id": "1",
-        "winner": "123"
-      },
-      "prev_hash": "480136bde765d5426b1bb701386a48fb3912278ab95f40787431567ea9ee8260",
-      "timestamp": "2026-04-22T23:53:48+03:00",
-      "hash": "16480fdab178779d18d36c83cd09a9e3c04bbdffdcf82824f2e6397d8b4415fd"
+      "prev_hash": "cc79d77e0e716bb88f397e6f635f24ca0bcf583d8d6eb3a21824498fdc12271e",
+      "timestamp": "2026-04-23T09:33:00+03:00",
+      "hash": "7a30aec919af950db5d9f50f2dcdf6c1ac04ec540d65e9f15ec0edb2f7ad64c1"
     }
   ]
 }

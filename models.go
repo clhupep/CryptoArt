@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 )
 
-// AuctionRecord аналог ChainRecord из Python
 type AuctionRecord struct {
 	Index     int            `json:"index"`
 	Type      string         `json:"type"` // CREATE_AUCTION, PLACE_BID, CLOSE_AUCTION
@@ -16,9 +15,7 @@ type AuctionRecord struct {
 	Hash      string         `json:"hash"`
 }
 
-// CalcHash вычисляет SHA-256 от отсортированного JSON (детерминировано)
 func (r *AuctionRecord) CalcHash() string {
-	// В Go 1.12+ json.Marshal сортирует ключи мап автоматически
 	data, _ := json.Marshal(map[string]any{
 		"index":     r.Index,
 		"type":      r.Type,
@@ -30,7 +27,6 @@ func (r *AuctionRecord) CalcHash() string {
 	return hex.EncodeToString(h[:])
 }
 
-// Finalize аналог finalize() из Python
 func (r *AuctionRecord) Finalize() {
 	r.Hash = r.CalcHash()
 }

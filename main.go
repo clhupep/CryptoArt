@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 )
 
 var chain *AuctionChain
@@ -18,18 +19,15 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	// API
-	mux.HandleFunc("/api/chain", handleGetChain)
-	mux.HandleFunc("/api/auction/create", handleCreateAuction)
-	mux.HandleFunc("/api/auction/bid", handlePlaceBid)
-	mux.HandleFunc("/api/auction/close", handleCloseAuction)
-	mux.HandleFunc("/api/hack/simulate", handleSimulateHack)
-	mux.HandleFunc("/api/validate", handleValidate)
+	mux.HandleFunc("GET /api/chain", handleGetChain)
+	mux.HandleFunc("POST /api/auction/create", handleCreateAuction)
+	mux.HandleFunc("POST /api/auction/bid", handlePlaceBid)
+	mux.HandleFunc("POST /api/auction/close", handleCloseAuction)
+	mux.HandleFunc("GET /api/validate", handleValidate)
 
-	// Статика
 	mux.Handle("/", http.FileServer(http.Dir("static")))
 
-	fmt.Println("🖼  Art Auction Blockchain running on http://localhost:8080")
+	fmt.Println("Art Auction Blockchain running on http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", mux))
 }
 
@@ -39,9 +37,24 @@ func respondJSON(w http.ResponseWriter, code int, data any) {
 	json.NewEncoder(w).Encode(data)
 }
 
+func ensureChainIntegrity(w http.ResponseWriter) bool {
+	valid, err := chain.ReloadAndValidate()
+	if err != nil {
+		respondJSON(w, 500, map[string]string{"error": err.Error(), "status": "error"})
+		return false
+	}
+	if !valid {
+		respondJSON(w, 503, map[string]string{
+			"error":  "Цепь повреждена! Обнаружена несанкционированная модификация.",
+			"status": "compromised",
+		})
+		return false
+	}
+	return true
+}
+
 func handleCreateAuction(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", 405)
+	if !ensureChainIntegrity(w) {
 		return
 	}
 
@@ -51,29 +64,20 @@ func handleCreateAuction(w http.ResponseWriter, r *http.Request) {
 		Owner      string  `json:"owner"`
 		StartPrice float64 `json:"start_price"`
 	}
-
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		respondJSON(w, 400, map[string]string{"error": "invalid json"})
 		return
 	}
 
-	fmt.Printf("📥 Создаю аукцион: ID=%s, Владелец=%s, Цена=%.2f\n", req.PaintingID, req.Owner, req.StartPrice)
-
 	chain.AddRecord("CREATE_AUCTION", map[string]any{
-		"painting_id": req.PaintingID,
-		"title":       req.Title,
-		"owner":       req.Owner,
-		"start_price": req.StartPrice,
-		"current_bid": req.StartPrice,
-		"bidder":      req.Owner,
+		"painting_id": req.PaintingID, "title": req.Title, "owner": req.Owner,
+		"start_price": req.StartPrice, "current_bid": req.StartPrice, "bidder": req.Owner,
 	})
-
 	respondJSON(w, 200, map[string]string{"status": "ok"})
 }
 
 func handlePlaceBid(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", 405)
+	if !ensureChainIntegrity(w) {
 		return
 	}
 
@@ -92,32 +96,27 @@ func handlePlaceBid(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 🛡 Проверка: новая ставка должна быть СТРОГО выше текущей
 	currentPrice, isOpen := chain.GetCurrentPrice(req.PaintingID)
 	if !isOpen {
 		respondJSON(w, 400, map[string]string{"error": "Аукцион не найден или уже закрыт"})
 		return
 	}
 	if req.Amount <= currentPrice {
-		respondJSON(w, 400, map[string]string{
-			"error": fmt.Sprintf("❌ Ставка отклонена: %.2f ≤ текущей цене (%.2f). Повысьте ставку!", req.Amount, currentPrice),
-		})
+		respondJSON(w, 400, map[string]string{"error": fmt.Sprintf("❌ Ставка %.2f ≤ текущей цене (%.2f). Повысьте ставку!", req.Amount, currentPrice)})
 		return
 	}
 
 	chain.AddRecord("PLACE_BID", map[string]any{
-		"painting_id": req.PaintingID,
-		"bidder":      req.Bidder,
-		"amount":      req.Amount,
+		"painting_id": req.PaintingID, "bidder": req.Bidder, "amount": req.Amount,
 	})
 	respondJSON(w, 200, map[string]string{"status": "ok"})
 }
 
 func handleCloseAuction(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", 405)
+	if !ensureChainIntegrity(w) {
 		return
 	}
+
 	var req struct {
 		PaintingID string `json:"painting_id"`
 	}
@@ -140,45 +139,26 @@ func handleCloseAuction(w http.ResponseWriter, r *http.Request) {
 	chain.mu.RUnlock()
 
 	chain.AddRecord("CLOSE_AUCTION", map[string]any{
-		"painting_id": req.PaintingID,
-		"winner":      lastBidder,
-		"final_price": lastAmount,
+		"painting_id": req.PaintingID, "winner": lastBidder, "final_price": lastAmount,
 	})
 	respondJSON(w, 200, map[string]string{"status": "ok"})
 }
 
 func handleGetChain(w http.ResponseWriter, r *http.Request) {
-	chain.mu.RLock()
-	defer chain.mu.RUnlock()
+	chain.mu.Lock()
+	data, _ := os.ReadFile(chain.File)
+	var storage chainStorage
+	json.Unmarshal(data, &storage)
+	chain.Records = storage.Records
+	chain.mu.Unlock()
 	respondJSON(w, 200, chain.Records)
 }
 
 func handleValidate(w http.ResponseWriter, r *http.Request) {
-	respondJSON(w, 200, map[string]bool{"valid": chain.Validate()})
-}
-
-func handleSimulateHack(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", 405)
+	valid, err := chain.ReloadAndValidate()
+	if err != nil {
+		respondJSON(w, 500, map[string]string{"error": err.Error()})
 		return
 	}
-	var req struct {
-		Index    int     `json:"index"`
-		NewOwner string  `json:"new_owner"`
-		NewPrice float64 `json:"new_price"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondJSON(w, 400, map[string]string{"error": "invalid json"})
-		return
-	}
-
-	rec, reason, nextBroken := chain.SimulateHack(req.Index, map[string]any{
-		"owner":       req.NewOwner,
-		"current_bid": req.NewPrice,
-	})
-	respondJSON(w, 200, map[string]any{
-		"modified_block": rec,
-		"broken_reason":  reason,
-		"next_broken":    nextBroken,
-	})
+	respondJSON(w, 200, map[string]bool{"valid": valid})
 }

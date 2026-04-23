@@ -15,7 +15,6 @@ type AuctionChain struct {
 	File    string
 }
 
-// Вспомогательная структура для JSON (исключает mutex)
 type chainStorage struct {
 	Records []AuctionRecord `json:"chain"`
 }
@@ -27,7 +26,7 @@ func NewChain(file string) (*AuctionChain, error) {
 			return nil, err
 		}
 		if !chain.validateInternal() {
-			return nil, errors.New("❌ Целостность цепи нарушена при загрузке")
+			return nil, errors.New("Целостность цепи нарушена при загрузке")
 		}
 	} else {
 		chain.mu.Lock()
@@ -49,6 +48,24 @@ func (c *AuctionChain) initGenesis() {
 	c.Records = append(c.Records, genesis)
 }
 
+func (c *AuctionChain) ReloadAndValidate() (bool, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	data, err := os.ReadFile(c.File)
+	if err != nil {
+		return false, fmt.Errorf("не удалось прочитать файл: %w", err)
+	}
+
+	var storage chainStorage
+	if err := json.Unmarshal(data, &storage); err != nil {
+		return false, fmt.Errorf("ошибка парсинга JSON: %w", err)
+	}
+
+	c.Records = storage.Records
+	return c.validateInternal(), nil
+}
+
 func (c *AuctionChain) AddRecord(recordType string, payload map[string]any) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -68,13 +85,7 @@ func (c *AuctionChain) AddRecord(recordType string, payload map[string]any) {
 	rec.Finalize()
 	c.Records = append(c.Records, rec)
 	c.saveInternal()
-	fmt.Println("✅ Запись добавлена и сохранена.")
-}
-
-func (c *AuctionChain) Validate() bool {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-	return c.validateInternal()
+	fmt.Println("Запись добавлена и сохранена.")
 }
 
 func (c *AuctionChain) validateInternal() bool {
@@ -116,7 +127,6 @@ func (c *AuctionChain) load() error {
 func (c *AuctionChain) GetActiveAuctions() []map[string]any {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
-
 	opened := make(map[string]map[string]any)
 	for _, rec := range c.Records {
 		switch rec.Type {
@@ -140,35 +150,9 @@ func (c *AuctionChain) GetActiveAuctions() []map[string]any {
 	return res
 }
 
-func (c *AuctionChain) SimulateHack(index int, newPayload map[string]any) (AuctionRecord, string, bool) {
-	c.mu.RLock()
-	if index < 1 || index >= len(c.Records) {
-		c.mu.RUnlock()
-		return AuctionRecord{}, "invalid_index", false
-	}
-	rec := c.Records[index]
-	c.mu.RUnlock()
-
-	rec.Payload = newPayload
-	rec.Hash = rec.CalcHash()
-
-	reason := "none"
-	nextBroken := false
-	if rec.PrevHash != c.Records[index-1].Hash {
-		reason = "prev_hash_link_broken"
-	}
-	if index+1 < len(c.Records) && c.Records[index+1].PrevHash != rec.Hash {
-		reason = "next_block_reference_broken"
-		nextBroken = true
-	}
-	return rec, reason, nextBroken
-}
-
-// GetCurrentPrice возвращает текущую максимальную ставку и флаг "аукцион открыт"
 func (c *AuctionChain) GetCurrentPrice(paintingID string) (float64, bool) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
-
 	var currentPrice float64
 	var isOpen bool
 
